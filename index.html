@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ট্রান্সপোর্ট ম্যানেজার</title>
+<title>ট্রান্সপোর্ট এজেন্সি</title>
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
@@ -148,6 +148,23 @@
  margin-bottom: 18px;
  }
  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+ #backBtn {
+ display: none;
+ align-items: center;
+ gap: 6px;
+ background: var(--asphalt);
+ color: var(--paper);
+ border: none;
+ border-radius: 20px;
+ padding: 8px 16px;
+ font-family: 'Hind Siliguri', sans-serif;
+ font-weight: 600;
+ font-size: 14px;
+ cursor: pointer;
+ margin-bottom: 18px;
+ }
+ #backBtn.show { display: inline-flex; }
+ #backBtn:hover { background: var(--asphalt-light); }
  .grid-4 { grid-template-columns: repeat(4, 1fr); }
  .stat-card {
  background: var(--card);
@@ -336,6 +353,8 @@
  </nav>
 
  <main class="main">
+
+ <button id="backBtn">← ফিরে যাও</button>
 
  <!-- ================= DASHBOARD ================= -->
  <section class="view active" id="view-dashboard">
@@ -812,6 +831,8 @@ async function init() {
  setupNav();
  setupForms();
 
+ if (!history.state) history.replaceState({ view: 'dashboard' }, '', '#dashboard');
+
  document.getElementById('dailyDate').value = todayStr();
  document.getElementById('tripDate').value = todayStr();
  document.getElementById('bDate').value = todayStr();
@@ -840,6 +861,7 @@ function setupNav() {
 
  document.getElementById('hamburgerBtn').addEventListener('click', toggleSidebar);
  document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
+ document.getElementById('backBtn').addEventListener('click', () => history.back());
 }
 function toggleSidebar() {
  document.getElementById('sidebar').classList.toggle('open');
@@ -850,10 +872,30 @@ function closeSidebar() {
  document.getElementById('sidebarOverlay').classList.remove('open');
 }
 
+// মোবাইলের হার্ডওয়্যার/জেসচার ব্যাক বাটন চাপলে (বা ব্রাউজারের ব্যাক বাটনে)
+// অ্যাপ থেকে বেরিয়ে না গিয়ে এক স্টেপ করে আগের ভিউ-তে ফিরে আসার জন্য
+// history.pushState ব্যবহার করা হচ্ছে — প্রতিটা ভিউ পরিবর্তনে একটা করে
+// history এন্ট্রি যোগ হয়, আর popstate ইভেন্টে সেটা ধরে ভিউ বদলানো হয়।
+let isHistoryNav = false;
+
+window.addEventListener('popstate', (e) => {
+ const name = (e.state && e.state.view) || 'dashboard';
+ isHistoryNav = true;
+ switchView(name);
+ isHistoryNav = false;
+});
+
 async function switchView(name) {
  document.querySelectorAll('.nav-item[data-view]').forEach((el) => el.classList.toggle('active', el.dataset.view === name));
  document.querySelectorAll('.view').forEach((el) => el.classList.remove('active'));
  document.getElementById('view-' + name).classList.add('active');
+ document.getElementById('backBtn').classList.toggle('show', name !== 'dashboard');
+ document.querySelector('.main').scrollTop = 0;
+
+ if (!isHistoryNav) {
+ if (!history.state) history.replaceState({ view: name }, '', '#' + name);
+ else history.pushState({ view: name }, '', '#' + name);
+ }
 
  if (name === 'dashboard') await renderDashboard();
  else if (name === 'dispatch') await renderDispatch();
