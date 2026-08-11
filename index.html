@@ -77,18 +77,22 @@
  border-radius: 6px;
  }
  img#sidebarBrandIcon {
- width: 26px;
- height: 26px;
- object-fit: cover;
+ width: 34px;
+ height: 34px;
+ object-fit: contain;
  border-radius: 6px;
  vertical-align: middle;
+ background: #fff;
+ padding: 2px;
  }
  img#mobileTopLogo {
- width: 24px;
- height: 24px;
- object-fit: cover;
- border-radius: 5px;
+ width: 38px;
+ height: 38px;
+ object-fit: contain;
+ border-radius: 6px;
  vertical-align: middle;
+ background: #fff;
+ padding: 2px;
  }
  .nav-item {
  padding: 12px 20px;
@@ -251,6 +255,15 @@
  font-size: 26px; line-height: 1; cursor: pointer; padding: 4px 8px;
  }
  #mobileTopLogo { height: 38px; width: auto; border-radius: 4px; }
+ #mobileTopShopName {
+ color: var(--paper);
+ font-family: 'Baloo Da 2', sans-serif;
+ font-weight: 600;
+ font-size: 16px;
+ white-space: nowrap;
+ overflow: hidden;
+ text-overflow: ellipsis;
+ }
 
  #sidebarOverlay {
  display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
