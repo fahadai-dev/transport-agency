@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>নতুন দোকান তৈরি — শুধু অ্যাডমিন</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+ :root {
+ --asphalt: #23272b;
+ --asphalt-light: #2f353a;
+ --paper: #f7f3e9;
+ --paper-dark: #ece5d3;
+ --amber: #d98e2b;
+ --amber-light: #f2a93c;
+ --ink: #2b2620;
+ --muted: #6f6a5f;
+ --danger: #c1442c;
+ --success: #4a7c4e;
+ --radius: 10px;
+ }
+ * { box-sizing: border-box; }
+ body {
+ margin: 0;
+ min-height: 100vh;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ background: var(--asphalt);
+ background-image: radial-gradient(circle at 20% 20%, var(--asphalt-light), var(--asphalt) 60%);
+ font-family: 'Hind Siliguri', sans-serif;
+ color: var(--ink);
+ }
+ .card {
+ width: 100%;
+ max-width: 420px;
+ margin: 20px;
+ background: var(--paper);
+ border-radius: var(--radius);
+ padding: 36px 32px;
+ box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+ }
+ .warn-badge {
+ display: flex;
+ align-items: center;
+ gap: 8px;
+ background: var(--asphalt);
+ color: var(--amber-light);
+ border-radius: 20px;
+ padding: 8px 14px;
+ font-size: 12.5px;
+ font-weight: 600;
+ margin-bottom: 20px;
+ }
+ .brand {
+ font-family: 'Baloo Da 2', sans-serif;
+ font-weight: 700;
+ font-size: 24px;
+ color: var(--asphalt);
+ margin: 0 0 4px;
+ }
+ .tagline {
+ color: var(--muted);
+ font-size: 14px;
+ margin: 0 0 24px;
+ }
+ label {
+ display: block;
+ font-size: 14px;
+ font-weight: 600;
+ margin: 14px 0 6px;
+ color: var(--asphalt);
+ }
+ input {
+ width: 100%;
+ padding: 11px 13px;
+ border-radius: 8px;
+ border: 1px solid #d8cfb8;
+ background: #fff;
+ font-family: inherit;
+ font-size: 15px;
+ }
+ input:focus {
+ outline: none;
+ border-color: var(--amber);
+ box-shadow: 0 0 0 3px rgba(217,142,43,0.2);
+ }
+ input#adminCode {
+ border-color: var(--asphalt);
+ background: #fbead2;
+ }
+ input[type="file"] { padding: 8px; font-size: 13px; }
+ .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+ hr { border: none; border-top: 1px solid var(--border, #e4dcc6); margin: 20px 0; }
+ .logo-preview {
+ width: 68px; height: 68px;
+ border-radius: 8px;
+ margin-top: 10px;
+ object-fit: cover;
+ border: 1px solid #d8cfb8;
+ display: none;
+ background: #fff;
+ }
+ button {
+ width: 100%;
+ margin-top: 24px;
+ padding: 12px;
+ border: none;
+ border-radius: 8px;
+ background: var(--amber);
+ color: #fff;
+ font-family: 'Baloo Da 2', sans-serif;
+ font-weight: 600;
+ font-size: 16px;
+ cursor: pointer;
+ transition: background 0.15s;
+ }
+ button:hover { background: var(--amber-light); }
+ button:disabled { opacity: 0.6; cursor: not-allowed; }
+ .error {
+ margin-top: 14px;
+ background: #fbe4de;
+ color: var(--danger);
+ border: 1px solid #f0bdae;
+ border-radius: 8px;
+ padding: 10px 12px;
+ font-size: 14px;
+ display: none;
+ }
+ .success {
+ margin-top: 14px;
+ background: #e4efe1;
+ color: var(--success);
+ border: 1px solid #bcd8bb;
+ border-radius: 8px;
+ padding: 10px 12px;
+ font-size: 14px;
+ display: none;
+ line-height: 1.5;
+ }
+</style>
+</head>
+<body>
+ <div class="card">
+ <div class="warn-badge">🔒 শুধু অ্যাডমিন — এই লিংক কখনো ক্লায়েন্টকে দেবেন না</div>
+ <p class="brand">নতুন দোকান তৈরি করুন</p>
+ <p class="tagline">ক্লায়েন্টের দোকানের জন্য মালিক অ্যাকাউন্ট এখান থেকে বানিয়ে দিন</p>
+
+ <form id="createForm">
+ <label for="adminCode">আডমিন কোড (গোপন)</label>
+ <input type="password" id="adminCode" required placeholder="তোমার গোপন কোড">
+
+ <hr>
+
+ <label for="shopName">দোকানের নাম</label>
+ <input type="text" id="shopName" required placeholder="যেমন: হোসনেআরা ট্রান্সপোর্ট এজেন্সী">
+
+ <label for="fullName">মালিকের নাম</label>
+ <input type="text" id="fullName" required placeholder="যেমন: মোঃ করিম">
+
+ <label for="logoInput">দোকানের লোগো / ছবি (ঐচ্ছিক)</label>
+ <input type="file" id="logoInput" accept="image/*">
+ <div class="hint">লোগো না দিলে ডিফল্ট আইকন দেখাবে — পরেও যোগ করা যাবে</div>
+ <img id="logoPreview" class="logo-preview" alt="লোগো প্রিভিউ">
+
+ <label for="email">মালিকের ইমেইল</label>
+ <input type="email" id="email" required autocomplete="off">
+
+ <label for="password">মালিকের পাসওয়ার্ড</label>
+ <input type="text" id="password" required minlength="6" autocomplete="off">
+
+ <div class="error" id="errorBox"></div>
+ <div class="success" id="successBox"></div>
+ <button type="submit" id="submitBtn">দোকান তৈরি করো</button>
+ </form>
+ </div>
+
+ <script>
+ const form = document.getElementById('createForm');
+ const errorBox = document.getElementById('errorBox');
+ const successBox = document.getElementById('successBox');
+ const submitBtn = document.getElementById('submitBtn');
+ const logoInput = document.getElementById('logoInput');
+ const logoPreview = document.getElementById('logoPreview');
+
+ let logoDataUrl = '';
+
+ // ছবি রিসাইজ করে ছোট base64 বানানো হয়, যেন metadata-তে সহজে ফিট করে
+ logoInput.addEventListener('change', () => {
+ const file = logoInput.files[0];
+ if (!file) { logoDataUrl = ''; logoPreview.style.display = 'none'; return; }
+
+ const reader = new FileReader();
+ reader.onload = (e) => {
+ const img = new Image();
+ img.onload = () => {
+ const maxSize = 200;
+ let { width, height } = img;
+ if (width > height) { if (width > maxSize) { height *= maxSize / width; width = maxSize; } }
+ else { if (height > maxSize) { width *= maxSize / height; height = maxSize; } }
+
+ const canvas = document.createElement('canvas');
+ canvas.width = width; canvas.height = height;
+ canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+ logoDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+ logoPreview.src = logoDataUrl;
+ logoPreview.style.display = 'block';
+ };
+ img.src = e.target.result;
+ };
+ reader.readAsDataURL(file);
+ });
+
+ form.addEventListener('submit', async (e) => {
+ e.preventDefault();
+ errorBox.style.display = 'none';
+ successBox.style.display = 'none';
+ submitBtn.disabled = true;
+ submitBtn.textContent = 'তৈরি হচ্ছে...';
+
+ const payload = {
+ admin_code: document.getElementById('adminCode').value,
+ shop_name: document.getElementById('shopName').value.trim(),
+ full_name: document.getElementById('fullName').value.trim(),
+ email: document.getElementById('email').value.trim(),
+ password: document.getElementById('password').value,
+ logo_url: logoDataUrl || null,
+ };
+
+ try {
+ const res = await fetch('/api/create-owner', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify(payload),
+ });
+ const result = await res.json();
+ if (!res.ok) throw new Error(result.error || 'দোকান তৈরি করা যায়নি');
+
+ successBox.innerHTML = `<b>${payload.shop_name}</b> তৈরি হয়ে গেছে!<br>
+ এই ইমেইল/পাসওয়ার্ড দিয়ে ক্লায়েন্ট এখন login.html থেকে ঢুকতে পারবে:<br>
+ ইমেইল: ${payload.email}<br>পাসওয়ার্ড: ${payload.password}`;
+ successBox.style.display = 'block';
+ form.reset();
+ logoPreview.style.display = 'none';
+ logoDataUrl = '';
+ } catch (err) {
+ errorBox.textContent = err.message;
+ errorBox.style.display = 'block';
+ } finally {
+ submitBtn.disabled = false;
+ submitBtn.textContent = 'দোকান তৈরি করো';
+ }
+ });
+ </script>
+</body>
+</html>
