@@ -623,6 +623,19 @@
  <!-- ================= ACCOUNT ================= -->
  <section class="view" id="view-account">
  <h1>আমার অ্যাকাউন্ট</h1>
+
+ <div class="card" style="max-width:420px" id="logoCard">
+ <label>দোকানের লোগো / ছবি</label>
+ <div style="display:flex; align-items:center; gap:14px; margin-bottom:10px;">
+ <img id="currentLogoPreview" style="width:56px;height:56px;object-fit:contain;border-radius:8px;border:1px solid var(--border);background:#fff;padding:3px;display:none;" alt="লোগো">
+ </div>
+ <input type="file" id="logoChangeInput" accept="image/*">
+ <div style="font-size:12px;color:var(--muted);margin-top:6px;">ছবি স্পষ্ট ও ভালো আলোয় তোলা হলে লোগোও স্পষ্ট দেখাবে</div>
+ <div class="modal-actions" style="justify-content:flex-start">
+ <button type="button" class="btn primary" id="saveLogoBtn">লোগো সেভ করো</button>
+ </div>
+ </div>
+
  <div class="card" style="max-width:420px">
  <form id="changePasswordForm">
  <label>নতুন পাসওয়ার্ড</label>
@@ -820,11 +833,14 @@ async function init() {
  if (logoUrl) {
  document.getElementById('sidebarBrandIcon').outerHTML = `<img id="sidebarBrandIcon" src="${logoUrl}" alt="লোগো">`;
  document.getElementById('mobileTopLogo').outerHTML = `<img id="mobileTopLogo" src="${logoUrl}" alt="লোগো">`;
+ document.getElementById('currentLogoPreview').src = logoUrl;
+ document.getElementById('currentLogoPreview').style.display = 'inline-block';
  }
 
  document.getElementById('userName').textContent = profile.full_name;
  document.getElementById('userRole').textContent = profile.role === 'owner' ? 'মালিক' : 'স্টাফ';
  if (profile.role === 'owner') document.getElementById('navStaff').style.display = 'flex';
+ if (profile.role !== 'owner') document.getElementById('logoCard').style.display = 'none';
 
  await loadVehicles();
  await loadCompanies();
@@ -1342,6 +1358,49 @@ function setupForms() {
  showToast('পাসওয়ার্ড বদলানো হয়েছে');
  e.target.reset();
  });
+
+ /* ---- দোকানের লোগো বদলানো (শুধু owner) ---- */
+ let newLogoDataUrl = '';
+ const logoChangeInput = document.getElementById('logoChangeInput');
+ const currentLogoPreview = document.getElementById('currentLogoPreview');
+ if (logoChangeInput) {
+ logoChangeInput.addEventListener('change', () => {
+ const file = logoChangeInput.files[0];
+ if (!file) return;
+ const reader = new FileReader();
+ reader.onload = (e) => {
+ const img = new Image();
+ img.onload = () => {
+ const maxSize = 320;
+ let { width, height } = img;
+ if (width > height) { if (width > maxSize) { height *= maxSize / width; width = maxSize; } }
+ else { if (height > maxSize) { width *= maxSize / height; height = maxSize; } }
+ const canvas = document.createElement('canvas');
+ canvas.width = width; canvas.height = height;
+ const ctx = canvas.getContext('2d');
+ ctx.imageSmoothingEnabled = true;
+ ctx.imageSmoothingQuality = 'high';
+ ctx.drawImage(img, 0, 0, width, height);
+ newLogoDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+ currentLogoPreview.src = newLogoDataUrl;
+ currentLogoPreview.style.display = 'inline-block';
+ };
+ img.src = e.target.result;
+ };
+ reader.readAsDataURL(file);
+ });
+ }
+ const saveLogoBtn = document.getElementById('saveLogoBtn');
+ if (saveLogoBtn) {
+ saveLogoBtn.addEventListener('click', async () => {
+ if (!newLogoDataUrl) { showToast('আগে একটা ছবি নির্বাচন করো', true); return; }
+ const { error } = await supabaseClient.from('shops').update({ logo_url: newLogoDataUrl }).eq('id', currentProfile.shop_id);
+ if (error) { showToast('লোগো সেভ করা যায়নি: ' + error.message, true); return; }
+ document.getElementById('sidebarBrandIcon').outerHTML = `<img id="sidebarBrandIcon" src="${newLogoDataUrl}" alt="লোগো">`;
+ document.getElementById('mobileTopLogo').outerHTML = `<img id="mobileTopLogo" src="${newLogoDataUrl}" alt="লোগো">`;
+ showToast('লোগো সেভ হয়েছে');
+ });
+ }
 
  /* ---- daily accounts date nav ---- */
  document.getElementById('dailyDate').addEventListener('change', renderDailyAccounts);
