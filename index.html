@@ -69,30 +69,35 @@
  padding: 0 16px 16px;
  border-bottom: 1px solid var(--asphalt-lighter);
  margin-bottom: 12px;
- }
- .sidebar .brand img {
- display: block;
- width: 100%;
- height: auto;
- border-radius: 6px;
+ display: flex;
+ align-items: center;
+ gap: 10px;
  }
  img#sidebarBrandIcon {
- width: 34px;
- height: 34px;
- object-fit: contain;
- border-radius: 6px;
+ width: 38px;
+ height: 38px;
+ object-fit: cover;
+ border-radius: 8px;
  vertical-align: middle;
- background: #fff;
- padding: 2px;
+ flex-shrink: 0;
+ box-shadow: 0 0 0 1px var(--asphalt-lighter);
  }
  img#mobileTopLogo {
  width: 38px;
  height: 38px;
- object-fit: contain;
- border-radius: 6px;
+ object-fit: cover;
+ border-radius: 8px;
  vertical-align: middle;
- background: #fff;
- padding: 2px;
+ flex-shrink: 0;
+ box-shadow: 0 0 0 1px rgba(255,255,255,0.15);
+ }
+ #sidebarShopName {
+ font-family: 'Baloo Da 2', sans-serif;
+ font-weight: 700;
+ font-size: 16px;
+ color: var(--amber-light);
+ letter-spacing: 0.2px;
+ line-height: 1.25;
  }
  .nav-item {
  padding: 12px 20px;
@@ -271,11 +276,10 @@
  background: none; border: none; color: var(--paper);
  font-size: 26px; line-height: 1; cursor: pointer; padding: 4px 8px;
  }
- #mobileTopLogo { height: 38px; width: auto; border-radius: 4px; }
  #mobileTopShopName {
  color: var(--paper);
  font-family: 'Baloo Da 2', sans-serif;
- font-weight: 600;
+ font-weight: 700;
  font-size: 16px;
  white-space: nowrap;
  overflow: hidden;
@@ -294,7 +298,7 @@
  z-index: 400; padding: 16px 0; transform: translateX(-100%); transition: transform 0.25s ease;
  }
  .sidebar.open { transform: translateX(0); }
- .sidebar .brand { display: block; padding: 0 16px 16px; }
+ .sidebar .brand { display: flex; padding: 0 16px 16px; }
  .sidebar-footer {
  margin-top: auto; padding: 16px 20px; border-top: 1px solid var(--asphalt-lighter);
  display: block;
@@ -627,7 +631,7 @@
  <div class="card" style="max-width:420px" id="logoCard">
  <label>দোকানের লোগো / ছবি</label>
  <div style="display:flex; align-items:center; gap:14px; margin-bottom:10px;">
- <img id="currentLogoPreview" style="width:56px;height:56px;object-fit:contain;border-radius:8px;border:1px solid var(--border);background:#fff;padding:3px;display:none;" alt="লোগো">
+ <img id="currentLogoPreview" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:none;" alt="লোগো">
  </div>
  <input type="file" id="logoChangeInput" accept="image/*">
  <div style="font-size:12px;color:var(--muted);margin-top:6px;">ছবি স্পষ্ট ও ভালো আলোয় তোলা হলে লোগোও স্পষ্ট দেখাবে</div>
@@ -892,9 +896,32 @@ function closeSidebar() {
 // অ্যাপ থেকে বেরিয়ে না গিয়ে এক স্টেপ করে আগের ভিউ-তে ফিরে আসার জন্য
 // history.pushState ব্যবহার করা হচ্ছে — প্রতিটা ভিউ পরিবর্তনে একটা করে
 // history এন্ট্রি যোগ হয়, আর popstate ইভেন্টে সেটা ধরে ভিউ বদলানো হয়।
+//
+// এছাড়া কোনো মডাল/ডিটেইল প্যানেল/মোবাইল সাইডবার খোলা থাকা অবস্থায় ব্যাক চাপলে,
+// সরাসরি মূল ভিউ বদলে না গিয়ে আগে সেই খোলা লেয়ারটাই বন্ধ হয় — যেন সত্যিকারের
+// "এক ধাপ করে" পিছনে যাওয়া যায়, একসাথে দুইটা জিনিস না বদলে।
 let isHistoryNav = false;
 
+function closeAnyOpenLayer() {
+ const openModalEl = document.querySelector('.modal-overlay.open');
+ if (openModalEl) { openModalEl.classList.remove('open'); return true; }
+ if (document.getElementById('sidebar').classList.contains('open')) { closeSidebar(); return true; }
+ if (document.getElementById('companyDetailCard').style.display === 'block') { closeCompanyDetail(); return true; }
+ if (document.getElementById('vehicleDetailCard').style.display === 'block') { closeVehicleDetail(); return true; }
+ if (document.getElementById('driverDetailCard').style.display === 'block') { closeDriverDetail(); return true; }
+ return false;
+}
+
 window.addEventListener('popstate', (e) => {
+ if (closeAnyOpenLayer()) {
+ // ব্যাক নেভিগেশনটা "বাতিল" করে বর্তমান ভিউ-এর state আবার পুশ করা হচ্ছে,
+ // যাতে শুধু খোলা লেয়ারটা বন্ধ হয়, মূল ভিউ না বদলায়। পরের বার ব্যাক চাপলে
+ // তখন আসল ভিউ চেঞ্জ হবে।
+ const current = document.querySelector('.view.active');
+ const currentName = current ? current.id.replace('view-', '') : 'dashboard';
+ history.pushState({ view: currentName }, '', '#' + currentName);
+ return;
+ }
  const name = (e.state && e.state.view) || 'dashboard';
  isHistoryNav = true;
  switchView(name);
@@ -1371,16 +1398,21 @@ function setupForms() {
  reader.onload = (e) => {
  const img = new Image();
  img.onload = () => {
- const maxSize = 320;
- let { width, height } = img;
- if (width > height) { if (width > maxSize) { height *= maxSize / width; width = maxSize; } }
- else { if (height > maxSize) { width *= maxSize / height; height = maxSize; } }
+ const size = 320;
+ // ছবিকে বর্গাকার (square) ক্যানভাসে center-crop করা হচ্ছে, যাতে
+ // সাইডবার/টপবারে গোল বা রাউন্ডেড আইকন হিসেবে বসানো হলে স্ট্রেচ বা
+ // অস্বাভাবিক দেখাবে না — object-fit:cover এর মতোই আচরণ করবে।
  const canvas = document.createElement('canvas');
- canvas.width = width; canvas.height = height;
+ canvas.width = size; canvas.height = size;
  const ctx = canvas.getContext('2d');
  ctx.imageSmoothingEnabled = true;
  ctx.imageSmoothingQuality = 'high';
- ctx.drawImage(img, 0, 0, width, height);
+ const scale = Math.max(size / img.width, size / img.height);
+ const drawW = img.width * scale;
+ const drawH = img.height * scale;
+ const dx = (size - drawW) / 2;
+ const dy = (size - drawH) / 2;
+ ctx.drawImage(img, dx, dy, drawW, drawH);
  newLogoDataUrl = canvas.toDataURL('image/jpeg', 0.9);
  currentLogoPreview.src = newLogoDataUrl;
  currentLogoPreview.style.display = 'inline-block';
