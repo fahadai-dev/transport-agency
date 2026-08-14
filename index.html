@@ -346,6 +346,7 @@
  <div class="nav-item" data-view="vehicles">🚛মোট গাড়ি</div>
  <div class="nav-item" data-view="drivers">🧑‍✈️ ড্রাইভার হিসাব</div>
  <div class="nav-item" data-view="otherBookings">📦 অন্যান্য বুকিং</div>
+ <div class="nav-item" data-view="partyLedger">📒 পার্টির হিসাব</div>
  <div class="nav-item" data-view="documents">📄 কাগজপত্র মেয়াদ</div>
  <div class="nav-item" data-view="staff" id="navStaff" style="display:none">👥 স্টাফ</div>
  <div class="nav-item" data-view="account">⚙️ আমার অ্যাকাউন্ট</div>
@@ -598,6 +599,42 @@
  </div>
  </section>
 
+ <!-- ================= PARTY LEDGER (আলাদা হিসাব — মূল সিস্টেমে যোগ হয় না) ================= -->
+ <section class="view" id="view-partyLedger">
+ <h1>পার্টির হিসাব</h1>
+ <p style="color:var(--muted);margin-top:-12px">এটা সম্পূর্ণ আলাদা একটা খাতা — এখানকার কোনো টাকা ড্যাশবোর্ড, দৈনিক হিসাব বা মূল ট্রিপ হিসাবের সাথে যোগ হয় না। প্রত্যেকটা পার্টির নিজস্ব আলাদা হিসাব থাকবে।</p>
+ <div class="toolbar">
+ <div></div>
+ <button class="btn primary" id="addPartyBtn">+ নতুন পার্টি যোগ করো</button>
+ </div>
+ <div class="card">
+ <table>
+ <thead><tr><th>পার্টির নাম</th><th>ফোন</th><th>মোট এন্ট্রি</th><th>মোট ভাড়া</th><th>মোট জমা</th><th>বাকি</th><th></th></tr></thead>
+ <tbody id="partyListBody"><tr><td colspan="7" class="empty">লোড হচ্ছে...</td></tr></tbody>
+ </table>
+ </div>
+
+ <div class="card" id="partyDetailCard" style="display:none">
+ <div class="toolbar" style="margin-bottom:10px">
+ <h2 style="font-family:'Baloo Da 2',sans-serif;font-size:16px;margin:0" id="partyDetailTitle">—</h2>
+ <div style="display:flex;gap:8px;flex-wrap:wrap">
+ <button class="btn small primary" id="addPartyEntryBtn">+ নতুন এন্ট্রি</button>
+ <button class="btn small secondary" onclick="closePartyDetail()">বন্ধ করো</button>
+ </div>
+ </div>
+ <div class="grid-3 grid-4" style="margin-bottom:14px">
+ <div class="stat-card income"><div class="label">মোট ভাড়া</div><div class="value" id="partyDetailTotalRent">৳০</div></div>
+ <div class="stat-card income"><div class="label">মোট জমা</div><div class="value" id="partyDetailTotalReceived">৳০</div></div>
+ <div class="stat-card cost"><div class="label">মোট খরচ</div><div class="value" id="partyDetailTotalExpense">৳০</div></div>
+ <div class="stat-card due"><div class="label">মোট বাকি</div><div class="value" id="partyDetailTotalDue" style="color:var(--danger)">৳০</div></div>
+ </div>
+ <table>
+ <thead><tr><th>তারিখ</th><th>গাড়ি/বিবরণ</th><th>রুট/সময়</th><th>ভাড়া</th><th>জমা</th><th>খরচ</th><th>বাকি</th><th></th></tr></thead>
+ <tbody id="partyEntriesBody"></tbody>
+ </table>
+ </div>
+ </section>
+
  <!-- ================= DOCUMENTS ================= -->
  <section class="view" id="view-documents">
  <h1>কাগজপত্র মেয়াদ</h1>
@@ -759,6 +796,54 @@
  </div>
 </div>
 
+<!-- ================= PARTY MODAL (আলাদা হিসাবের পার্টি) ================= -->
+<div class="modal-overlay" id="partyModalOverlay">
+ <div class="modal">
+ <h2 id="partyModalTitle">নতুন পার্টি</h2>
+ <form id="partyForm">
+ <input type="hidden" id="partyId">
+ <label>পার্টির নাম</label>
+ <input type="text" id="pName" required>
+ <label>ফোন (ঐচ্ছিক)</label>
+ <input type="text" id="pPhone">
+ <label>ঠিকানা/নোট (ঐচ্ছিক)</label>
+ <input type="text" id="pNote">
+ <div class="modal-actions">
+ <button type="button" class="btn secondary" onclick="closeModal('partyModalOverlay')">বাতিল</button>
+ <button type="submit" class="btn primary">সেভ করো</button>
+ </div>
+ </form>
+ </div>
+</div>
+
+<!-- ================= PARTY ENTRY MODAL ================= -->
+<div class="modal-overlay" id="partyEntryModalOverlay">
+ <div class="modal">
+ <h2 id="partyEntryModalTitle">নতুন এন্ট্রি</h2>
+ <form id="partyEntryForm">
+ <input type="hidden" id="peId">
+ <label>তারিখ</label>
+ <input type="date" id="peDate" required>
+ <div class="form-row">
+ <div><label>গাড়ি নং / বিবরণ</label><input type="text" id="peVehicle"></div>
+ <div><label>রুট / সময় (ইন-আউট)</label><input type="text" id="peRoute"></div>
+ </div>
+ <div class="form-row">
+ <div><label>ভাড়া (৳)</label><input type="number" id="peRent" min="0" step="0.01" value="0"></div>
+ <div><label>জমা/পাওয়া গেছে (৳)</label><input type="number" id="peReceived" min="0" step="0.01" value="0"></div>
+ </div>
+ <label>খরচ (৳)</label>
+ <input type="number" id="peExpense" min="0" step="0.01" value="0">
+ <label>নোট (ঐচ্ছিক)</label>
+ <textarea id="peNote" rows="2"></textarea>
+ <div class="modal-actions">
+ <button type="button" class="btn secondary" onclick="closeModal('partyEntryModalOverlay')">বাতিল</button>
+ <button type="submit" class="btn primary">সেভ করো</button>
+ </div>
+ </form>
+ </div>
+</div>
+
 <!-- ================= STAFF MODAL ================= -->
 <div class="modal-overlay" id="staffModalOverlay">
  <div class="modal">
@@ -787,6 +872,7 @@
 let currentProfile = null; // { id, shop_id, full_name, role }
 let vehiclesCache = [];
 let companiesCache = [];
+let partiesCache = [];
 
 if ('serviceWorker' in navigator) {
  window.addEventListener('load', () => {
@@ -909,6 +995,7 @@ function closeAnyOpenLayer() {
  if (document.getElementById('companyDetailCard').style.display === 'block') { closeCompanyDetail(); return true; }
  if (document.getElementById('vehicleDetailCard').style.display === 'block') { closeVehicleDetail(); return true; }
  if (document.getElementById('driverDetailCard').style.display === 'block') { closeDriverDetail(); return true; }
+ if (document.getElementById('partyDetailCard').style.display === 'block') { closePartyDetail(); return true; }
  return false;
 }
 
@@ -948,6 +1035,7 @@ async function switchView(name) {
  else if (name === 'vehicles') await renderVehiclesList();
  else if (name === 'drivers') await renderDrivers();
  else if (name === 'otherBookings') await renderBookings();
+ else if (name === 'partyLedger') await renderPartyLedger();
  else if (name === 'documents') await renderDocuments();
  else if (name === 'staff') await renderStaff();
  else if (name === 'newTrip') { populateVehicleSelect(document.getElementById('tripVehicle')); populateCompanySelect(); }
@@ -1033,7 +1121,7 @@ async function confirmMarkPaid() {
  await renderDashboard();
 }
 
-/* ---------------- COMPANIES / PARTY LEDGER ---------------- */
+/* ---------------- COMPANIES / PARTY LEDGER (ট্রিপ ভিত্তিক — মূল হিসাবের অংশ) ---------------- */
 async function renderCompanies() {
  await loadCompanies();
  document.getElementById('companyDetailCard').style.display = 'none';
@@ -1091,6 +1179,121 @@ async function deleteCompany(id) {
  await renderCompanies();
 }
 
+/* ---------------- PARTY LEDGER (সম্পূর্ণ আলাদা হিসাব — মূল ড্যাশবোর্ড/ট্রিপে যোগ হয় না) ---------------- */
+let currentPartyDetailId = null;
+
+async function loadParties() {
+ const { data, error } = await supabaseClient.from('party_accounts').select('*').eq('shop_id', currentProfile.shop_id).order('name');
+ if (error) { showToast('পার্টির তালিকা লোড করতে সমস্যা হয়েছে', true); return; }
+ partiesCache = data || [];
+}
+
+async function renderPartyLedger() {
+ await loadParties();
+ document.getElementById('partyDetailCard').style.display = 'none';
+ currentPartyDetailId = null;
+
+ const { data: entries, error } = await supabaseClient.from('party_entries').select('*').eq('shop_id', currentProfile.shop_id);
+ if (error) { showToast('পার্টির হিসাব লোড করা যায়নি', true); return; }
+
+ const byParty = {};
+ (entries || []).forEach((e) => {
+ if (!byParty[e.party_id]) byParty[e.party_id] = { count: 0, rent: 0, received: 0 };
+ byParty[e.party_id].count += 1;
+ byParty[e.party_id].rent += Number(e.rent);
+ byParty[e.party_id].received += Number(e.received);
+ });
+
+ const body = document.getElementById('partyListBody');
+ body.innerHTML = partiesCache.length ? partiesCache.map((p) => {
+ const s = byParty[p.id] || { count: 0, rent: 0, received: 0 };
+ const due = s.rent - s.received;
+ return `<tr>
+ <td>${p.name}</td><td>${p.phone || '—'}</td><td>${s.count}</td><td>${money(s.rent)}</td><td>${money(s.received)}</td>
+ <td>${due > 0.5 ? `<span class="badge due">${money(due)}</span>` : '—'}</td>
+ <td><button class="btn small secondary" onclick="showPartyDetail('${p.id}')">বিস্তারিত</button>${currentProfile.role === 'owner' ? ` <button class="btn small danger" onclick="deleteParty('${p.id}')">ডিলিট</button>` : ''}</td>
+ </tr>`;
+ }).join('') : '<tr><td colspan="7" class="empty">এখনো কোনো পার্টি যোগ করা হয়নি — উপরের বাটন থেকে যোগ করো</td></tr>';
+}
+
+async function showPartyDetail(partyId) {
+ const p = partiesCache.find((x) => x.id === partyId);
+ if (!p) return;
+ currentPartyDetailId = partyId;
+ await renderPartyEntries();
+ document.getElementById('partyDetailTitle').textContent = p.name + (p.phone ? ' — ' + p.phone : '');
+ document.getElementById('partyDetailCard').style.display = 'block';
+}
+function closePartyDetail() {
+ document.getElementById('partyDetailCard').style.display = 'none';
+ currentPartyDetailId = null;
+}
+
+async function renderPartyEntries() {
+ if (!currentPartyDetailId) return;
+ const { data: entries, error } = await supabaseClient.from('party_entries').select('*')
+ .eq('party_id', currentPartyDetailId).order('entry_date', { ascending: false });
+ if (error) { showToast('এন্ট্রি লোড করা যায়নি', true); return; }
+
+ let totalRent = 0, totalReceived = 0, totalExpense = 0;
+ const body = document.getElementById('partyEntriesBody');
+ body.innerHTML = (entries || []).length ? entries.map((e) => {
+ totalRent += Number(e.rent); totalReceived += Number(e.received); totalExpense += Number(e.expense);
+ const due = Number(e.rent) - Number(e.received);
+ return `<tr>
+ <td>${e.entry_date}</td><td>${e.vehicle_desc || '—'}</td><td>${e.route_note || '—'}</td>
+ <td>${money(e.rent)}</td><td>${money(e.received)}</td><td>${money(e.expense)}</td>
+ <td>${due > 0.5 ? `<span class="badge due">${money(due)}</span>` : (due < -0.5 ? `<span class="badge paid">অতিরিক্ত ${money(-due)}</span>` : '—')}</td>
+ <td>
+ <button class="btn small secondary" onclick="editPartyEntry('${e.id}')">এডিট</button>
+ ${currentProfile.role === 'owner' ? ` <button class="btn small danger" onclick="deletePartyEntry('${e.id}')">ডিলিট</button>` : ''}
+ </td>
+ </tr>`;
+ }).join('') : '<tr><td colspan="8" class="empty">এই পার্টির এখনো কোনো এন্ট্রি নেই</td></tr>';
+
+ document.getElementById('partyDetailTotalRent').textContent = money(totalRent);
+ document.getElementById('partyDetailTotalReceived').textContent = money(totalReceived);
+ document.getElementById('partyDetailTotalExpense').textContent = money(totalExpense);
+ document.getElementById('partyDetailTotalDue').textContent = money(totalRent - totalReceived);
+}
+
+async function deleteParty(id) {
+ if (!confirm('এই পার্টিটা ডিলিট করতে চাও? এর সব এন্ট্রিও মুছে যাবে। এই কাজ ফেরানো যাবে না।')) return;
+ const { error: delEntriesErr } = await supabaseClient.from('party_entries').delete().eq('party_id', id);
+ if (delEntriesErr) { showToast('ডিলিট করা যায়নি: ' + delEntriesErr.message, true); return; }
+ const { error } = await supabaseClient.from('party_accounts').delete().eq('id', id);
+ if (error) { showToast('ডিলিট করা যায়নি: ' + error.message, true); return; }
+ showToast('পার্টি ডিলিট হয়েছে');
+ await renderPartyLedger();
+}
+
+let editingPartyEntryId = null;
+function editPartyEntry(entryId) {
+ supabaseClient.from('party_entries').select('*').eq('id', entryId).single().then(({ data: e, error }) => {
+ if (error || !e) { showToast('এন্ট্রি পাওয়া যায়নি', true); return; }
+ editingPartyEntryId = e.id;
+ document.getElementById('peId').value = e.id;
+ document.getElementById('peDate').value = e.entry_date;
+ document.getElementById('peVehicle').value = e.vehicle_desc || '';
+ document.getElementById('peRoute').value = e.route_note || '';
+ document.getElementById('peRent').value = e.rent;
+ document.getElementById('peReceived').value = e.received;
+ document.getElementById('peExpense').value = e.expense;
+ document.getElementById('peNote').value = e.note || '';
+ document.getElementById('partyEntryModalTitle').textContent = 'এন্ট্রি এডিট করো';
+ openModal('partyEntryModalOverlay');
+ });
+}
+async function deletePartyEntry(entryId) {
+ if (!confirm('এই এন্ট্রিটা ডিলিট করতে চাও?')) return;
+ const { error } = await supabaseClient.from('party_entries').delete().eq('id', entryId);
+ if (error) { showToast('ডিলিট করা যায়নি: ' + error.message, true); return; }
+ showToast('এন্ট্রি ডিলিট হয়েছে');
+ await renderPartyEntries();
+ await renderPartyLedger();
+ if (currentPartyDetailId) document.getElementById('partyDetailCard').style.display = 'block';
+}
+
 /* ---------------- DISPATCH BOARD ---------------- */
 async function renderDispatch() {
  await loadVehicles();
@@ -1132,7 +1335,7 @@ async function returnVehicle(id) {
  await renderDispatch();
 }
 
-/* ---------------- DASHBOARD ---------------- */
+/* ---------------- DASHBOARD (এখানে পার্টির হিসাব কখনোই যোগ হয় না) ---------------- */
 async function renderDashboard() {
  const today = todayStr();
  const { data: trips, error } = await supabaseClient.from('trips').select('*').eq('trip_date', today);
@@ -1284,6 +1487,70 @@ function setupForms() {
  closeModal('companyModalOverlay');
  await loadCompanies();
  await renderCompanies();
+ });
+
+ /* ---- party (আলাদা হিসাব) modal ---- */
+ document.getElementById('addPartyBtn').addEventListener('click', () => {
+ document.getElementById('partyForm').reset();
+ document.getElementById('partyId').value = '';
+ document.getElementById('partyModalTitle').textContent = 'নতুন পার্টি';
+ openModal('partyModalOverlay');
+ });
+ document.getElementById('partyForm').addEventListener('submit', async (e) => {
+ e.preventDefault();
+ const id = document.getElementById('partyId').value;
+ const payload = {
+ shop_id: currentProfile.shop_id,
+ name: document.getElementById('pName').value.trim(),
+ phone: document.getElementById('pPhone').value.trim() || null,
+ note: document.getElementById('pNote').value.trim() || null,
+ };
+ const query = id
+ ? supabaseClient.from('party_accounts').update(payload).eq('id', id)
+ : supabaseClient.from('party_accounts').insert(payload);
+ const { error } = await query;
+ if (error) { showToast('পার্টি সেভ করা যায়নি: ' + error.message, true); return; }
+ showToast('পার্টি সেভ হয়েছে');
+ closeModal('partyModalOverlay');
+ await renderPartyLedger();
+ });
+
+ /* ---- party entry (আলাদা হিসাবের এন্ট্রি) modal ---- */
+ document.getElementById('addPartyEntryBtn').addEventListener('click', () => {
+ if (!currentPartyDetailId) return;
+ editingPartyEntryId = null;
+ document.getElementById('partyEntryForm').reset();
+ document.getElementById('peId').value = '';
+ document.getElementById('peDate').value = todayStr();
+ document.getElementById('partyEntryModalTitle').textContent = 'নতুন এন্ট্রি';
+ openModal('partyEntryModalOverlay');
+ });
+ document.getElementById('partyEntryForm').addEventListener('submit', async (e) => {
+ e.preventDefault();
+ if (!currentPartyDetailId) { showToast('আগে একটা পার্টি খুলো', true); return; }
+ const id = document.getElementById('peId').value;
+ const payload = {
+ shop_id: currentProfile.shop_id,
+ party_id: currentPartyDetailId,
+ entry_date: document.getElementById('peDate').value,
+ vehicle_desc: document.getElementById('peVehicle').value.trim() || null,
+ route_note: document.getElementById('peRoute').value.trim() || null,
+ rent: Number(document.getElementById('peRent').value) || 0,
+ received: Number(document.getElementById('peReceived').value) || 0,
+ expense: Number(document.getElementById('peExpense').value) || 0,
+ note: document.getElementById('peNote').value.trim() || null,
+ created_by: currentProfile.id,
+ };
+ const query = id
+ ? supabaseClient.from('party_entries').update(payload).eq('id', id)
+ : supabaseClient.from('party_entries').insert(payload);
+ const { error } = await query;
+ if (error) { showToast('এন্ট্রি সেভ করা যায়নি: ' + error.message, true); return; }
+ showToast('এন্ট্রি সেভ হয়েছে');
+ closeModal('partyEntryModalOverlay');
+ await renderPartyEntries();
+ await renderPartyLedger();
+ document.getElementById('partyDetailCard').style.display = 'block';
  });
 
  /* ---- vehicle modal ---- */
